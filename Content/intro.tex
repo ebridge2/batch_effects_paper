@@ -1,0 +1,48 @@
+%
+% Stephanie comments
+% more information on the existing methods
+% ground the definitions in the techniques used
+% make clear straight up that the crossover effect is best
+% 
+\section{Introduction}
+
+The 21\textsuperscript{st} century has seen the advent of high-throughput techniques for acquiring data on an unprecedented scale. Collection of these datasets often occurs through consortia using a range of technologies across different sites, requiring data to be brought together by aggregation services and hosted by data banks for storage and sharing. These ``mega-studies'' comprising numerous individual studies serve the useful purpose of facilitating inference on individuals with unprecedented diversity; researchers can subvert traditional sample size and generalizability issues through the use of data from a more diverse sample of the population than could otherwise be collected.
+
+Unfortunately, aggregating data across diverse datasets introduces a source of undesirable variability known as a batch effect. Several strategies have been proposed to define a batch effect. \citet{Lazar2013Jul} summarize many of these approaches succinctly: ``the batch effect represents the systematic technical differences when samples are processed and measured in different batches and which are unrelated to any biological variation.'' Unfortunately, this unified description  provides limited information about how batch effects manifest, nor how they can be formally characterized and investigated. We have been unable to find a satisfactory technical definition of batch effects in the literature. 
+
+{\color{black}Broadly, many approaches model the batch collection or measurement process as a nuisance variable which is to be removed \cite{Pearl2010Jul,Johnson2007Jan,Leek2010-ua,Leek2015-jc,Wachinger2020Feb,Yu2018Nov,Pomponio2020Mar}, which implies  batch effect is a particular component of an associational or conditional model. These approaches typically make strong, potentially unjustified, and often inappropriate parametric assumptions about the data. % Moreover, they are typically limited to Euclidean variables and binary outcomes. 
+% 
+Two of the most prominent examples of these techniques which can be generalized to many of these other cases are the \Combat~and Conditional \Combat~batch effect correction procedures \cite{Johnson2007Jan}. These approaches have demonstrated empirical utility in certain genomics and neuroimaging contexts~\cite{Zhang2020Sep,Pomponio2020Mar}; however, it remains unclear when these approaches will be successful and when they will fail. Specifically, they could either remove biofidelic variability or fail to remove nuisance variability. }
+
+
+
+% These approaches, as we will illustrate below, are effective when the batches have similar demographic distributions. But, it is unclear what are the 
+% 
+% a lack of studies determining the appropriateness of these assumptions fails to justify their use in numerous contexts, such as neuroimaging. This is incompatible with modern views in many fields, such as causal inference, in which these assumptions are treated as extremely strong (and \textit{potentially prohibitive}) \cite{Rosenbaum1983Apr,Rosenbaum1985,Stuart2010Feb}.
+% 
+% We believe removing batch effects benefits from first \textit{understanding} batch effects formally. This inconsistency is compounded by the existence of testing approaches that readily apply to testing for differences between two non-Euclidean samples of data, such as the Distance Correlation (\Dcorr) \cite{Szekely2007Dec}, which have not yet been applied for batch effect detection.  This logical inconsistency has led to emphasis on the removal of associational effects or a removal of all systematic variation that exists between batches in a scientific investigation. This is not ideal due to the fact that batches may differ on other impactful variables (e.g., key demographic covariates) that may skew the observed associational heterogeneity. Other approaches remove conditional effects which, while more sophisticated, are also not necessarily appropriate. These strategies remove a batch effect conditional on key demographic covariates thought to impact the observed measurement. This has the limitation that, if the observed populations from which individuals are taken are not similar on the basis of both known and unknown impactful covariates, strong assumptions are required to claim that the conditional batch effect is a faithful representation of the true batch effect. For instance, the revolutionary 
+
+
+In this work, we develop a unified and systematic approach to the definition, detection, estimation, and mitigation of  batch effects. Our main conceptual advance is appreciating that one can view batch effects as causal effects rather than associational effects.  Given this understanding, we introduce a formal definition of causal batch effects. This formal definition reveals the limitations of (typically inappropriate) assumptions implicit in existing approaches~\cite{Rosenbaum1983Apr,Rosenbaum1985,Stuart2010Feb}. Methodologically, we introduce a simple strategy appended to existing techniques for associational or conditional batch effect detection and removal to reflect this new perspective. 
+
+We demonstrated the utility of this perspective by developing \textit{Causal} \Dcorr~\cite{Szekely2007Dec}---building on modern, non-parametric statistical methods---to estimate and detect the presence of batch effects. Second, we utilized this strategy to develop \textit{Causal} \Combat---an augmentation of the \Combat~procedure---which uses causal methods to remove batch effects while limiting the removal of variation due to known demographic variables. Our main empirical contribution is to apply these methods to simulations and a large neuroimaging mega-study assembled by the Consortium for Reliability and Reproducibility (CoRR) \cite{corr}, consisting of more than $1700$ connectome measurements across $27$ disparate studies. Our investigations reveal that previous strategies fail to differentiate between veridical signal and sources of variability due to other experimental design factors. Further, our simulations demonstrate that existing strategies can, under many realistic use-cases, remove more apparent veridical biological signal (or, struggle to remove the batch effect entirely) than \textit{Causal} \Combat.
+
+{\edits{Informally, these results can be summarized succinctly: when upstream covariate distributions of measured individuals vary widely, and those covariates are known to impact both the measurements and the selection of individuals to particular batches (the covariates are confounding), parametric techniques can yield imprecise estimates of batch effects. Through simulation, we illustrate that causal adjustments to these procedures can be used to overcome these limitations. Our real data analysis reveals two salient points:
+\begin{enumerate}[leftmargin=*]
+    \item strategies to detect batch effects from mega-studies may struggle to parse differences between batch effects and real demographic variability when datasets are insufficiently similar, and
+    \item caution must be taken while interpreting the data for subsequent tasks, as upstream procedures (used to mitigate batch effects) directly influence subsequent conclusions. This the challenge of performing principled statistical inference while pooling data from large consortium studies.
+\end{enumerate}
+Together, we hope this work contributes to the ongoing effort to improve the validity and reliability of inferences in past and future mega-studies.}}
+
+% Specifically, we make the following contributions:
+% 
+% \begin{enumerate}[leftmargin=*]
+% \item We explicitly introduce a formal definition of batch effects leveraging ideas from causal inference. This formal definition reveals the limitations of (typically inappropriate) assumptions implicit in existing approaches~\cite{Rosenbaum1983Apr,Rosenbaum1985,Stuart2010Feb}.
+% \item Given this definition, we develop \textit{Causal} \Dcorr~\cite{Szekely2007Dec}, building on modern non-parametric statistical methods, to estimate and detect the presence of batch effects. 
+% \item We develop \textit{Causal} \Combat, an augmentation of the \Combat~procedure, which uses causal methods to remove batch effects while limiting the removal of variation due to known demographic variables.
+% \item We apply  these strategies to a large neuroimaging mega-study assembled by the Consortium for Reliability and Reproducibility (CoRR) \cite{corr}, consisting of more than $1700$ connectome measurements across $24$ disparate studies. Our investigations reveal that previous strategies fail to differentiate between veridical biological signal and sources of variability due to other experimental design factors. Further, previous strategies for removing batch effects remove more apparently veridical biological signal than  \textit{Causal} \Combat.
+% \end{enumerate}
+% has been applied to present biological investigations in which establishment of causal batch effect estimands cannot or has not been achieved. 
+% \textit{Internal validity} refers to the degree to which evidence supports a claim within the study population being investigated, and \textit{external validity} refers to the degree to which evidence supports broader conclusions which can be applied outside the study population being investigated. 
+% Together, we believe t
+% This focus on batch effects as a problem in causal inference will transform the manner in which both aggregation and downstream inference on mega-studies is performed.

@@ -1,0 +1,244 @@
+%
+
+\section{Methods}
+
+% TODO first mention of mega-studies is in the methods, but it should be mentioned up above i think?
+% TODO this paragraph doesn't really do anything for me, what is the point, it seems like more introduction?
+Many large mega-studies collected tend to focus on retrospective cohort designs or case-control designs, in which demographic variables regarding the individual are known at the time of data collection. Often, we seek to identify whether a subset, or subsets, or these demographic variables correspond to elements of the study either directly (by looking at the observed data itself) or indirectly (through the use of reductions of the observed data, such as summary statistics or transforms of the observed data). In the context of batch effects, we seek to identify whether the batch encodes useful information regarding the observed outcome of interest, the sample of data associated with an arbitrary individual. Whereas batch effects are typically looked at as the batch being correlated to an outcome of interest, we restructure this problem as a question in causal inference.  
+
+% TODO this whole section is written like a tutorial, but this paper is not one. make it short and sweet. 
+% agreed; I will refactor a lot of this to supplement I think.
+The language regarding causal inference typically varies from traditional associational statistics. To mitigate this hurdle, we will describe both associational and causal methods within the language of causal inference, to make the similarities (and differences) readily apparent, since causal language can be adapted for associational analogues, but not necessarily vice versa. It is important to note that the language choice in which associational analyses are described is not-necessarily-standard for the field. We begin with several definitions, which are constant across all analytical approaches:
+\begin{enumerate}
+\item \textit{target measurement}: the target measurement is the measurement outcome of interest $Y_i$. In the case of batch effects, this is the measurement which we believe may (or may not) be corrupted by a batch effect. The target measurement is the realized measurement in the scientific study.
+% TODO people write 'counterfactual measurement'? its not a measurement at all, by definition
+% people write "counterfactual outcome"; in the language of the paper, I replace "outcome" from causal language with "measurement" to be more specific about exactly what we are talking about, since the outcomes here are all measurements in the context of batch effects, hence target outcome => target measurement, and counterfactual outcome => counterfactual measurement. I think it would be analogous to saying "potential measurement"
+\item \textit{counterfactual measurement}: the counterfactuals $Y_i^{(k)}$ are the (potentially hypothetical) measurements for item $i$ when collected in batch $k$. We may (or may not) realize all $k = 1, \hdots, K$ possible counterfactual measurements for each measured item due to the design of the study. These measurements are hypothetical in that they may not actually be realized in the course of our experiment.
+\item \textit{treatment}: the treatment is the variable we believe may causally motivate the target variable. Stated another way, we seek to understand whether a particular element of treatment leads to an appreciable effect on the outcome. In the case where individuals have only a single realized measurement, treatment variable $T_i$ is the random variable where $Y_i = Y_i^{(k)}$ if $T_i = k$. That is, the treatment variable is the variable which indexes the batch an item's measurement is from. In the case that two treatments are present, one batch is typically referred to as the ``treatment group,'' and the other batch is referred to as the ``control group.''
+% TODO the below definition is not strictly correct. and i don't think people use the term 'confound' typically, rather, sets of variables can jointly be confounders.
+% I took the first sentence from a slight rewording of the wikipedia https://en.wikipedia.org/wiki/Confounding#:~:text=In%20statistics%2C%20a%20confounder%20(also,variable%2C%20causing%20a%20spurious%20association, so if that's what you mean I don't think that's the case. here the independent vara is taken to be the treatment, and the dependent variable the target.
+\item \textit{confounder}: a confounder is a variable (or set of variables) which influences both the target measurement and the treatment variable. 
+Failure to suitably account for confounds may result in over or under detection of a batch effect depending on how the confounds present. $X_i$ is used to denote confounds which are collected or known regarding item $i$, and $Z_i$ is used to denote confounds which are not collected or unknown regarding item $i$.
+\end{enumerate}
+
+\begin{assumption}
+Let $k = 1, \hdots, K$ be an index of $K$ possible batches, and $i = 1, \hdots, n$ be an index of $n$ possible items to be measured. Suppose:
+\begin{enumerate}
+    \item A measurement $Y_i \in \mathcal Y$ is a realization from a sequence of counterfactual measurements $\set*{Y_i^{(k)}}_{k = 1}^K$,
+    \item The treatment variable $T_i \in \{1,\hdots,K\}$ is the random variable where $T_i = k$ if $Y_i = Y_i^{(k)}$,
+    \item $X_i \in \mathcal X$ is a set of confounds which are known,
+    \item $Z_i \in \mathcal Z$ is a set of confounds which are unknown, and
+    \item $Y_i^{(k)} \cond X_i, Z_i \distas{} F_k$, where $F_k$ is the conditional measurement distribution for batch $k$.
+\end{enumerate}
+\end{assumption}
+
+% TODO if estimating batch effects requires unknown covariates, then we have no hope of estimating it.  so i don't think this definition is correct. 
+% I think this is the case that it includes them? As a pre-requisite for a causal effect is that the covariate distributions are equal on *everything*, not just what you know. This is why experimental studies are extremely valuable; e.g., you have equal distribution on known and unknown things (due to the randomization procedure being ignorant of unknowns), so while you don't know the covariates, you *can* still estimate it correctly. Second, is why observational studies cannot be used to deduce causality or not causality (but only, possibly causal, or possibly not causal), due to the fact that you need to be really confident in the strong ignorability condition (e.g., that individuals are not assigned to one batch or the other based on things you don't know) since the covariate balancing procedure ensures balance over the known things.
+\begin{definition}[Relational Batch Effect]
+Suppose the setup described in Assumption \ref{ass:batch}. A relational batch effect exists between two batches $k, l \in \set*{1, \hdots, K}$ if $F_k \neq F_l$.
+\label{def:batch_effect}
+\end{definition}
+Stated in words, a batch effect exists between two batches when the counterfactual measurement distributions conditional on confounds (both observed and unobserved) between batches $k$ and $l$ are unequal. This construct is called a \textit{two-sample} procedure, in which we have \textit{two samples} of data and wish to examine whether they possess disparate distributions. An important clarification is that we pose that batch effects are \textit{relational}, rather than \textit{absolute}, effects; that is, a pair of studies share a batch effect, rather than a single study possessing a batch effect. A favorable alternative definition may be instead:
+\begin{definition}[Absolute Batch Effect]
+Suppose the setup described in Assumption \ref{ass:batch}, and further that there exists some measurement $\tilde Y_i$ free from batch effects (a \textit{ground truth} measurement), where $\tilde Y_i \cond X_i, Z_i \sim F$. An absolute batch effect exists for batch $k$ when $F_k \neq F$.
+\label{def:abs_batch_effect}
+\end{definition}
+% TODO this thing is superfluous.  we are not writing a report on our thought process, we are writing a methods paper about estimating and mitgating batch effects.
+% agreed; will move to supplement, or maybe you think this could be a discussion point?
+In practice, however, we do not believe Definition \ref{def:abs_batch_effect} to be as useful for two reasons. First, note that to characterize such a distribution $F$ would pre-suppose that we have the ability to characterize our desired measurement in a manner which is uncorrupted by batch effects (that is, we have a \textit{ground truth} for what the measurement should indicate). Such a construction is not even possible for many fields which seek to look at batch effects, restricting the applicability of such a definition. One could certainly make assumptions as to the specifics of a ground truth measurement (such as assuming that the sample mean of successive trials is a ground truth), though it is not entirely clear how such a distinction would be practically useful. Second, if a hypothetical level of rigor could be taken to ensure that such a measurement procedure existed that was free from batch effects, this rigor may not necessarily be the case in all fields which seek to investigate batch effects. In the interest of developing a broadly applicable definition which is of practical utility, we therefore favor a relational definition. This theoretical distinction differs from the theoretical construction presented in \citet{Lazar2013Jul} under the ``General Assumptions.'' Hereafter, we use the term ``batch effect'' to denote the relational batch effect described in Definition \ref{def:batch_effect}.
+
+This approach has several key advantages over traditional approaches for batch effect investigation. Namely:
+\begin{enumerate}
+    \item Quantifiability: most definitions of batch effects tend to be defined qualitatively, rather than quantitatively. Our definition is technical, in that it describes where, and how, batch effects enter an experiment statistically.
+    % TODO the above sounds like 'generality' rather than 'flexibility'
+    % yes; agreed. will merge this point with the bottom one under a "generality" heading.
+    \item Flexibility: Our definition of a batch effect is not limited to any particular field, or any particular definition of a batch, instead leaving those determinations up to the researcher. Many go to lengths to define the batch, rather than the batch effect, and then shape the definition of a batch effect around the definition of a batch. Our definition subverts this issue entirely by \textit{intentionally} focusing not on the definition of the batch nor the measurement of investigation, but rather the statistical characteristics of the batch effect itself. In this fashion, many existing definitions of a batch effect can be formulated under the general context of our definition of a batch effect.
+    \item Causality: Our definition of batch effects rigorously defines batch effects as a problem in causal inference. Bringing causality into focus highlights that we not only need to compare characteristics of the measurements under investigation, but also the \textit{sampling characteristics} of the relevant confounds in the populations of interest.
+    % TODO the below sounds like you mean we can use outcomes that are non-binary?
+    % I mean that we can use data that isn't just univariate and real. Nobody actually DOES a test of batch effects that I can find, so in that sense we are the (possibly only) test of batch effects, but amongst those who study batch effects, it is rather intuitive how the batch adjustment models used would facilitate feature-wise tests. The problem is these would be univariate in nature, and completely ignore any level of complex structure (such as graph data) and therefore aggregate inference might struggle. need to figure out how to word better.
+    \item Testability: Numerous statistical tests exist for the conditional two-sample testing problem, either with or without rigorous statistical assumptions, for univariate, multivariate, or even more complex non-euclidean assumptions as to the nature of $\mathcal Y, \mathcal X$, or $\mathcal Z$. This contrasts with many current approaches to batch effects, which tend to be restricted to euclidean data.
+    % TODO the below sounds redundant with 2.  how could 2 be true, but not 5?
+    % I think I agree. I will modify. perhaps the below is a discussion point in the succeeding paragraph; I just wanteed to distinguish the fact that our approach supports a field of batch effects for all fields, rather than batch effects being disparate pursuits that are field-specific.
+    \item Standardizability: The quantifiability and flexibility of Definition \ref{def:batch_effect} facilitates the standardization of definitions of batch effects, regardless of researcher field. Standardization of definitions encourages the development of methodologies which are \textit{context-free}: techniques which can be framed and understood independent of a specific field or specialty. 
+\end{enumerate}
+The utility of this approach is immediate. It is, in fact, the case that numerous existing approaches for defining batch effects represent a subset of possible effects one can define under Definition \ref{def:batch_effect}. For instance, all of the methods of for removing batch effects from \citet{Lazar2013Jul} described in the ``General Assumptions'' section could motivate definitions of a batch effect which are special cases with heavy assumptions (including Gaussianity, an additive/multiplicative mixed model, the absence of correlations, and that the within-batch mean is a ground truth) of Definitions \ref{def:batch_effect} or \ref{def:abs_batch_effect}.
+
+\subsection{Batch Effects in Scientific Studies}
+\label{sec:batch_study}
+Most large mega-studies tend to be observational in nature. An observational study is a study in which researchers observe an effect (such as a target measurement) given a population of individuals who are exposed to a target treatment (the batch) and who possess confounding variables of interest (which may be measured or unmeasured). While observational studies typically are less powerful than experimental studies in establishing causality, disparate methods of estimating batch-related effects can yield differing amounts of evidence for causal effects.
+
+% TODO i think where we define batch effects causally, we want to also provide the associational definition, maybe the associational definition first. 
+% good idea. will update tomorrow.
+\paragraph{Associational Effects} Traditional approaches for identifying whether a treatment corresponds with a target are called associational analyses. In an associational analysis, we seek to identify whether the treatment associates (or correlates) with the target after making adjustments via the confounders. Unfortunately, associational analyses are subject to numerous biases. In particular, associational analyses are subject to many types of confounding biases in the context of batch effect analyses \cite{Lee2011}. In particular, when comparing two batches for a particular effect, the two batches may have entirely disparate baseline or demographic characteristics. If the baseline demographic characteristics are entirely collinear with the batch, an effect will not be able to be estimated. However, if the baseline demographic characteristics are largely collinear, an effect may still be estimated, but statistical inference may rest heavily on a small subset of points, such as high leverage or outlier points. 
+
+Moreover, baseline demographic characteristics of samples sharing a similar support does not imply similarity in the baseline characteristics of individual samples. For instance, two batches may share males and females between the ages of twenty and fifty, but the first batch study may only include males aged twenty, and the second batch may include males aged twenty five through fifty. In practice, this distinction means that we will still be able to estimate an effect between males amongst the two batches, even though we do not actually know how similar males between the two studies appear (since there are no males in the first batch who are male who are similar to individuals in the second batch who are male). This may be unfavorable, and in certain contexts, can yield a biased estimate of a batch effect \cite{Rosenbaum1983Apr}.
+
+\paragraph{Causal-Observational Effects} To mitigate many of the issues in associational analyses with promiment confounds, propensity score methods look at the group without the regressor of interest and attempt to ``balance'' the sample characteristics of impactful covariates in the untreated population with the treated population. In this fashion, propensity balancing subverts many of the limitations of associational inference. The two most common approaches include:
+\begin{enumerate}
+    \item \textit{Inverse propensity weighted trimming}: Through inverse propensity weighted trimming, we begin by constructing a model to assess the probability of treatment assignment conditional on baseline characteristics (the \textit{propensity} to be treated). We seek to balance the two studies on the propensity of individuals to be treated \cite{Stuart2010Feb,Lee2011}.
+    \item \textit{Matching}: Matching is a strategy in which individuals who received the treatment are matched to individuals who did not receive the treatment on the basis of baseline demographic characteristics. Matching can be exact in which we look for individual(s) identical to a given treatment individual on all known confounds, or inexact in which we look for individual(s) similar to a given treatment individual on all known confounds \cite{Stuart2010Feb,Rubin1973,Rubin1976,Rubin1976b}.
+\end{enumerate}
+It is important to note that covariate balance alone is insufficient to establish a causal relationship; rather, covariate balance simply provides robustness to confounds that may arise and yield disparate inference from associational effects. In this fashion, covariate-balanced effects are an important step towards deriving a causal relationship when paired with more powerful methods such as experimentally-studied batch effect estimation.
+
+\paragraph{Causal-Experimental Effects}
+An experimental effect is an effect which is observed through an experimental study. An experimental study contrasts from an observational study in that the researcher involved in an experimental study directly determines the treatments (the batches) in which an individual is measured. There are two types of experimental procedures which may arise in batch effects:
+\begin{enumerate}
+    \item Randomized Trial: An individual has their outcome measured in one of $K$ potential batches with $K$-dimensional probability vector $\pmb p_i$, which may or may not depend on observed covariates. In the case where $\pmb p_i = \pmb p$ is not a function of covariates $X_i$, the randomization procedure ensures that substantial rigor need not be taken with respect to $Z_i$; that is, while we may not have measured $Z_i$, the distribution of $(X_i, Z_i)$ over our $K$ batches of interest is equal \cite{Imai2008Mar}. In the case where $\pmb p_i = f(X_i)$; that is, treatment assignment is subdivided into strata \cite{Fisher1935}. Estimation of a treatment effect is still possible within strata, but estimation of a global treatment effect is more difficult to establish \cite{Imai2008Mar}. This procedure is useful when we want to examine more closely the impact of treatment on particular strata (such as individuals who have a pre-existing condition for an illness).
+    \item Crossover Randomized Trial: Each individual receives all levels of the treatment, being progressively ``crossed over'' into successive treatment strategies after completing a single treatment. That is, in contrast to treatments for other study designs, $T_i \subseteq \{1, \hdots, K\}$. In this fashion, each individual can serve as their own control in an analysis style resembling 1$:$1 exact matching, with the added benefit that we have matched on both known \textit{and} unknown potential confounds \cite{Jones2003,Senn2002Aug}. A crossover randomized trial benefits from the fact that, while for other analysis techniques we are left to infer the counterfactual distributions on subsets of disparate individuals, in a crossover randomized trial, we have numerous (if not all) realizations of counterfactuals for each individual. So long as the treatments do not have a causal effect on successive treatments, we obtain unbiased estimates of the effect of treatment with few assumptions necessary \cite{Jones2003}. In the context of a batch effect, this amounts to the experimenter directly measuring each individual across a series of possible batch-related techniques, such as utilizing disparate measurement technologies or processing strategies for examining a common measurement.
+\end{enumerate}
+% TODO these 2 are only relevant to define if we have such data. 
+% we have a crossover randomized trial; NKI Rockland was collected with the intention of looking at impact of disparate magnet parameters, so I think it's fair to call it a crossover randomized trial given the intent. 
+% further, if we decide to look at the study that chris douville gave us in genetics (RNA cancer dataset), that is also a crossover randomized trial (they collected reads from 8 wells for all participants, with an intention of looking at what happens when one uses a sum over all wells, vs each well individually, and therefore also shares intention for this type of analysis and therefore seems "fair game" to me to be considered a crossover trial)
+
+\subsection{Estimation and Testing of Batch Effects}
+\label{sec:batch_est}
+Recall the definition of a batch effect given in Definition \ref{def:batch_effect}. We seek to investigate the following hypothesis:
+\begin{align}
+    H_0: F_k = F_l \textrm{ against }H_A: F_k \neq F_l
+    \label{eqn:batch_full}
+\end{align}
+that is, the hypothesis where under the null, no batch effect exists, and under the alternative, a batch effect exists. Ideally, we will be able to test this hypothesis directly; however, in practice, this proves difficult due to the fact that there may be unobserved confounds $Z_i$ upon which $Y_i$ depends. If the confounds are unknown, or ``missing'', a naive strategy would be to ignore them all together. In particular, let $Y_i^{(k)} \cond X_i \distas{} F_k'$, and consider a test of:
+\begin{align}
+    H_0': F_k' = F_l' \textrm{ against }H_A': F_k' \neq F_l'
+    \label{eqn:batch_ignorable}
+\end{align}
+This related test provides evidence in favor of a batch effect if:
+\begin{enumerate}
+    \item We are able to reject the null hypothesis $H_0'$,
+\end{enumerate}
+and if one of the following conditions hold:
+\begin{itemize}
+    \item[2.(a)] Unobserved confounders are not impactful in the conditional measurement distribution; that is, $Y_i^{(k)} \cond X_i, Z_i \overset{\mathcal D}{=}Y_i^{(k)} \cond X_i$, or
+    \item[2.(b)] We are able to conclude that the treatment assignment is \textit{strongly ignorable}; that is, $(Y_i^{(k)}, Y_i^{(l)}) \indep T_i \cond X_i$, where $T_i$ is the treatment assignment of individual $i$.
+\end{itemize}
+In practice, the former amounts to a statistical test. In this investigation, we achieve the former using partial distance correlation \cite{Szekely2014Dec}, a non-parametric statistic flexible to both non-euclidean measurements and confounds. The outcome $Y_i^{(k)}$ is a measurement of interest, such as a neuroimaging connectome, and the known confounds $X_i$ are covariates measured at the time of data collection, including age and sex of the measured individual.
+% The variables X_i aren't all confounders, some are colliders, etc.  use 'covariate' instead throughout.
+% when would a collider arise in an Xi or Zi, unless we were using summary statistics of our target measurements? I think this is an important distinction between what we argue (use the high dimensional measurement) vs other people (use low dimensional summary statistics) since in the former case, there are virtually no colliders I can think of, whereas in the latter case, there are many colliders (since the dependent variable is basically a hidden variable, and everything people look at for batch effects is a collider for the independent variables and the actual high dimensional measurement)
+For simplicity, we use the Frobenius norm between pairs of connectomes, and the Euclidean distance otherwise.
+
+Establishing the latter is more difficult. The latter aim is ensured by 2.(a) in the case where we have an experimental study design, such as is the case for a randomized design or a crossover randomized design, as described in Section \ref{sec:batch_study}. 
+% proof... obvious... a test of eqn (2) gives that Py|xk = Py|xl
+% (Xi, Zi) =D over K batches gives that Pxzk = Pxzl
+% then Pz|xk Pxk = Pz|xl Pxl
+% => Py|xk = int z Pyz|xk = int z Py|zxk Pz|xk Pxk dz = int z Py|zxk Pz|xl Pxl dz by above
+% => under H0 = Py|xl = int z Py|zxl Pz|xl Pxl dz
+% => since this holds for every y then Py|zxl = Py|zxk
+% similar argument for HA
+% => 1 + (2)
+In the case where the experiment is observational, the interpretation of an observed effect as causal requires both a quantitative and a qualitative examination of numerous heuristics of evidence, along with domain expertise as to the nature of observed trends identified. If the researcher is confident that the covariates collected are the only impactful covariates on the conditional measurement distribution (and condition 2.(a) is satisfied), then a test of Equation \ref{eqn:batch_ignorable} is equivalent to a test of Equation \ref{eqn:batch_full}. Procedures to balance the sample characteristics of the observed covariates in the study populations aid in the interpretation of an observed effect as causal by providing evidence in favor of 2.(b), in the event that the observed covariates $X_i$ are the only covariates that are impactful to which batch a dataset is assigned to. For instance, if two batches had an unobserved characteristic $Z_i$, and particular values were unique to batch $k$ or batch $l$, we would not be able to conclude that 2.(b) holds.
+% add more here.. proof perhaps that 1. + 2.(b) => batch effect?
+% rough sketch... H0 n HA = omega and H0' n HA' = omega
+% suffices to show that H0' >= H0 as that would imply that HA' <= HA
+% something about strong ignorability probably implies the above
+% ... then a rejection of HA' => a rejection of HA
+
+Given a pair of two batches $k$ and $l$ where the number of individuals $n_k < n_l$ and each batch is of an observational design, we consider the larger of the two batches to be the control batch, and investigate the propensity of control individuals in batch $l$ to undergo assignment to batch $k$ on the basis of observed demographic covariates. Individuals whose inverse propensity scores are less than $.01$ are excluded from estimation \cite{Rosenbaum1983Apr,Stuart2010Feb,Powell2020Sep}. This serves to eliminate individuals in the control batch who are dissimilar from individuals in the treatment batch, ensuring a notion of demographic overlap between the treatment and control batches \cite{Rosenbaum1983Apr,Stuart2010Feb}. If no control individuals remain in the control batch after inverse propensity weighted trimming, we conclude that causality cannot be established, and otherwise, that a causal effect is estimable. In a case in which the study sample characteristics do not prevent us from establishing causality outright (such as is the case when we have an observational design), it is still important to note that our interpretation of the test is not a discrete conclusion of causal or not causal. There may be evidence pointing us in one direction or the other, but a strong conclusion cannot be drawn in the absence of an experimental study.
+
+\subsection{Batch Effect Correction} 
+\label{sec:batch_cor}
+To adjust for batch, we investigate several strategies. First, we look at empirical Bayesian techniques, such as \Combat\ Correction \cite{Johnson2007Jan}. \Combat\ Correction has a bevy of support for batch effect correction across diffusion MRI, microarray assays, and other areas of neuroimaging and genomics. Unfortunately, \Combat\ has the disadvantage that its use requires multiple batches, restricting our ability to adequately account for batch if we only have a single study. Further, conditional \Combat~ignores sample characteristics of the studies of interest in observational populations. This has the interpretation that conditional \Combat\ may, in practice, remove a causal effect when no such effect can be estimated adequately due to inadequate overlap of sample properties of the populations of interest. To subvert this limitation, we instead propose the use of causal \Combat, in which conditional \Combat\ is performed on a set of observational studies in which all pairs of observational studies satisfy a notion of covariate balance. For our investigation, this amounts to performing conditional \Combat\ on subsets of studies in which all pairs of studies have an estimable causal effect.
+
+Second, we investigate within-batch relational adjustment techniques. $Z$-scoring each feature across an individual batch is simple, readily applicable to single studies, and has well-known theory to justify its usage \cite{Lazar2013Jul}. Similarly, we investigate ranking per-feature within-batch, in which each feature per-measurement is assigned a weight from 0 to 1 depending on its rank amongst the other observations within the study. Ideally, even if the magnitude of the measurement itself is corrupted by a batch effect, perhaps the relative magnitude of the effect is appreciable in comparison to other investigated individuals. Unfortunately, both $Z$-scoring and ranking have the disadvantage of centering each feature in multivariate studies about a common mean. This has the disadvantage that individual features become uninterpretable in magnitude with respect to one another.
+
+\subsection{Evaluation of Batch Effect Correction Techniques} We approach evaluation of batch effect correction techniques using several heuristics. In particular, we do not only wish to reasonably adjust for a batch effect; we desire to retain signals of interest for downstream analyses. We take the following approach by evaluating the presence, or absence, of:
+\begin{enumerate}
+    \item A batch-related effect: we investigate whether a batch-related effect is present or absent after application of the batch effect correction technique, using the estimation procedure above.
+    \item Within-batch demographic effects: The confounds for our batch effect estimation are chosen on the basis of being established predictors of the measurements. If a batch effect correction technique is useful, we should be able to detect within-batch demographic effects both before and after application of the technique. That is, batch effect correction techniques should be preserving of effects between groups of individuals.
+    \item Within-measurement properties: Since our data is inherently multivariate, individuals may seek to adjust for batch effects prior to estimating properties within individual measurements within each batch. Here, we are concerned with whether or not useful summary properties of the data established on the basis of the raw data are preserved after application of the batch effect adjustment technique. That is batch effect correction techniques should be preserving of effects within individual measurements within the batch.
+\end{enumerate}
+
+
+
+\begin{comment}
+
+\paragraph{Setup 1}
+Let $t=1, 2$ be an index of $2$ batches, and $i=1, \hdots, n$:
+\begin{enumerate}
+    % defined before associational
+    \item The treatment variable $T_i$ is the random variable which indexes the batch in which item $i$ was collected and whose realizations $t \in \{1,2\}$,
+    \item $Y_{i}$ are true outcome random variables, whose  realizations $y \in \mathcal Y$,
+    \item $X_i$ are observed covariate random variables, whose realizations $x \in \mathcal X$,
+    \item $\mbb{P}[Y_i | T_i=t]$ is the marginal true outcome distribution, which we denote simply by $\mbb{P}[Y_i | t]$,
+    \item $\mbb{P}[Y_{i} | X_i = x, T_i =t]$ is the conditional true outcome distribution, which we denote simply by $\mbb{P}[Y_{i} | x, t]$, and
+    \item $\mbb{P}[X_i|T_i=t]$ is the marginal covariate distribution, which we denote simply by $\mbb P[X_i | t]$,
+\end{enumerate}    
+
+\begin{definition}[Associational Batch Effect]
+\label{def:ass_effect}
+An associational effect exists between the two batches if $\mbb{P}[Y_i | 1] \neq \mbb{P}[Y_i | 2]$. 
+\end{definition}
+
+
+
+\begin{definition}[Conditional Batch Effect]
+An associational batch effect exists between the two batches if $\mbb{P}[Y_i | x,1] \neq \mbb{P}[Y_i | x,2]$. 
+\end{definition}
+
+\begin{definition}[Adjusted Batch Effect]
+Suppose that $\mbb P[X_i |1] \approx \mbb P[X_i | 2]$. An adjusted batch effect exists between the two batches if $\mbb{P}[Y_i | x,1] \neq \mbb P[Y_i | x,2]$.
+\end{definition}
+
+\paragraph{Setup 2}
+\begin{enumerate}
+    % these will be defined before causal
+    \item $Z_i = (Z_{i,c}, Z_{i,0})$ are the unobserved covariate random variables, where $Z_{i,c}$ denote unobserved covariates which are associated with the outcome, and $Z_{i,0}$ are the unobserved covariates which are not associated with the outcome, and whose realizations $z = (z_{c}, z_{0}) \in \mathcal Z$, 
+    \item $Y_i^{t=1}$ are the potential outcome random variables that would have been observed under batch $t=1$, and $Y_i^{t=2}$ are the potential outcome random variables that would have been observed under batch $t=2$, whose realizations $y_1, y_2 \in \mathcal Y$ respectively, and
+    \item $\mbb{P}[Y_{i}^{t=1} | X_i = x, Z_i=z]$ is the potential outcome distribution of item $i$ under batch $t=1$, and $\mbb{P}[Y_i^{t=2} | X_i=x, Z_i=z]$ is the potential outcome distribution of item $i$ under batch $t=2$, denoted by $\mbb{P}[Y_{i}^{t=1} | x, z]$ and $\mbb{P}[Y_i^{t=2} | x,z]$ respectively.
+\end{enumerate}
+
+\begin{definition}[Causal Batch Effect]
+Suppose that any of the following $3$ properties hold:
+\begin{enumerate}
+    \item the unconfoundedness assumption is satisfied: $Z_{i,c} \indep T_i \cond X_i$, or
+    \item The assumption of covariate sufficiency is satisfied: $Y_i \indep Z_i \cond T_i, X_i$, or
+    \item The randomization assumption is satisfied: $Z_i \indep T_i \cond X_i$.
+\end{enumerate}
+A causal batch effect exists between $2$ batches if $\mbb P[Y_i^{t=1} | x,z] \neq \mbb P[Y_i^{t=2}|x,z]$.
+\end{definition}
+The key aspect of the associational definition of batch effects is that the conditional outcome distribution $F_k''$ is the distribution of elements only where $T_i = k$; that is, we are defining an effect by comparing conditional distributions for items within batch $k$ and items within batch $l$ exclusively.
+
+The potential outcomes $Y_i^{(k)}$ are a distinct construct from the outcomes $Y_i$ which are described statistically by Definition \ref{def:ass_effect}. Each $Y_i$ is a true outcome for $i = 1, \hdots, n$; that is, these are outcomes which are collected and exist in our experimental setup. On the other hand, $Y_i^{(k)}$ for $i = 1, \hdots, n$ and $k = 1, 2$ need not be true outcomes. Rather, $Y_i = Y_i^{(k)}$ exclusively when the treatment $T_i$ corresponds to the batch $k$. The remaining potential outcome represents what we \textit{would have observed} (that is, they are \textit{counterfactual} outcomes) for outcome $Y_i$ had item $i$ been measured with treatment $k$ for $T_i \neq k$. This key distinction underlies the two definitions of causal batch effects we focus on:
+
+% covariate balance => you are comparing counterfactuals
+% strong ignorability => you are estimating something causal
+\begin{definition}[Causal Experimental Batch Effect]
+Suppose the setup described in Assumption \ref{ass:causal}. A causal experimental batch effect exists between two batches if:
+\begin{enumerate}
+    \item $F_1 \neq F_2$.
+\end{enumerate}
+\label{def:exp_batch_effect}
+\end{definition}
+
+% association, conditional, adjusted, causal. 
+% causal is any of randomization, unconfoundedness or covariate sufficiency.
+% associatal: P[Y | t]
+% conditional: P[Y | x,t]
+% adjusted: P[Y|x,t] after adjusting
+% causal: P[Y|x,z,t] 
+
+% we're not trying to make a claim of a "caused" batch effect necessarily
+% no need to explain causality here
+% use causal batch effect
+% associational (unadj)
+% conditional (unadj)
+% causal obs effect -> conditional (adj)
+% causal (if any 3 conditions hold)
+% 2.2 and 2.3 -> appendix
+% make 2.2 become 4 hypothesis tests and state which implementation is used (mention permuttion test)
+
+
+Compared to Definition \ref{def:ass_effect}, these two definitions state that causal batch effects exist precisely when the conditional distributions of potential outcomes we would have observed are unequal for the two batches, as opposed to stating that the distributions of true outcomes for the two batches are unequal. The key difference between Definitions \ref{def:exp_batch_effect} and \ref{def:obs_batch_effect} are the assumptions needed to characterize comparisons between the potential outcome distributions (rather than simply true outcome distributions). The covariate sufficiency assumption is rather strong: this assumption states that we have observed all the covariates $X_i$ which have a nonnegligible impact on our response $Y_i$. Likewise, the randomization assumption is rather strong: we must know that assignment to $T_i$ was independent of unobserved covariates, given the observed covariates, which is a direct function of the manner in which treatment assignments were made in the experiment. Each of these properties individually imply the unconfoundedness assumption \cite{Stone1993Jan}, which implies the strong ignorability assumption \cite{Stone1993Jan}. The strong ignorability assumption enables us to conclude that we have, in fact, compared the same potential outcome conditional distributions \cite{Rosenbaum1983Apr,Rosenbaum1985}.
+
+\subsection{Estimation and Testing of Batch Effects}
+Batch effects are inherently relational in the absence of a ground truth; that is, without a perfect reference outcome, the best one can do in practice is estimate batch effects by comparing pairs of batches. Given a pair of distribution functions $F_1'$ and $F_2'$, Definition \ref{def:ass_effect} motivates hypotheses of the form:
+\begin{align}
+    H_0: F_1' = F_2' \textrm{ against }F_1' \neq F_2' \label{eqn:batch_hypo}
+\end{align}
+To test this hypothesis, we use the partial distance correlation \cite{Szekely2014Dec}, a non-parametric statistic flexible to both non-euclidean outcomes and confounds. For simplicity, we use the Frobenius norm for graph-valued data (such as neuroimaging connectomes), and the Euclidean distance otherwise. Coupled with the assumption of covariate sufficiency, unconfoundedness, or randomization, it is in fact the case that a test of equation \ref{eqn:batch_hypo} is equivalent to testing $H_0: F_1 = F_2$, and $H_A: F_1 \neq F_2$. That is, with additional assumptions, a test for an associational effect is equivalent to a test for a causal batch effect.
+
+\paragraph{Covariate Balance and Unconfoundedness are Critical for Potential Outcome Comparisons}
+Traditional approaches to characterizing the correspondence between a treatment and a target in an observational study such as Definition \ref{def:ass_effect} are known as associational analyses. Associational analyses are subject to numerous types of confounding biases \cite{Rosenbaum1983Apr,Stuart2010Feb,Lee2011} that yield biased estimates of causal effects. A component of this dissimilarity is a lack of ``covariate balance'' between two batches under comparison \cite{Powell2020Sep}. In a comparison between two batches of measured items, there may be items in one or both groups which are dissimilar items in the other group on the basis of covariates. More formally, covariates or combinations of covariates may be associated more with particular batches than others. To account for this disparity, a procedure known as ``covariate balancing'' attempts to re-weight observations in the per-batch covariate distributions such that the weighted batches become similar in covariate distribution. In this work, we attempt to obtain covariate overlap and covariate balance through propensity trimming via logistic regression and $k:1$ matching using the \texttt{MatchIt} package \cite{matchit}, respectively. The treatment group is selected to be the smaller of the two groups, and the control group is selected to be the larger of the two groups, where with $n_t$ the number of individuals in the smaller (treatment) group and $n_c$ the number of individuals in the larger (control) group, $k = \floor{\frac{n_c}{n_t}}$ is chosen to be the largest number of control matches possible. Covariate overlap and covariate balance ensure that we are comparing samples with similar empirical distributions within the same regions of support, rather than extrapolates of estimates within disparate regions of support, of the potential outcome distributions \cite{Powell2020Sep}.
+
+The unconfoundedness assumption allows us to conclude that we have characterized potential outcome distributions conditional on confounders, wherein any unobserved covariates which impact the response are not confounded by the batch assignment. Without unconfoundedness, the construct in Equation (\ref{eqn:batch_hypo}) would not be of direct practical utility for estimating a causal batch effect, as we would be comparing potential outcome distributions which are non-analogous between the two batches (due to disparities in unknown covariates $Z_{i,c}$ which are confounded with the batch $T_i$ and the potential outcomes $Y_i$). In practice, this means that failing to achieve unconfoundedness would result in a test of an associational effect rather than a causal effect. To successfully estimate a causal effect in an observational study, we must combine domain expertise with previous literature and knowledge of the observational study protocol to decide whether the assumption of covariate sufficiency or unconfoundedness is reasonable.
+
+\end{comment}

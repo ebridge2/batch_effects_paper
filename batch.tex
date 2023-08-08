@@ -1,0 +1,79 @@
+\documentclass[onefignum, onetabnum,onealgnum,onethmnum, oneeqnum]{siamonline190516}
+\input{nd_preamble.tex}  
+\usepackage[symbol]{footmisc}
+\renewcommand{\thefootnote}{\arabic{footnote}}
+\usepackage{ericmath}
+
+
+\definecolor{fig1green}{rgb}{0.01, .7, 0.1}
+\definecolor{fig1orange}{rgb}{0.7, 0.34, 0.005}
+\newcommand{\Combat}{\texttt{ComBat}}
+\newcommand{\combat}{\texttt{ComBat}}
+\newcommand{\cCombat}{\texttt{Cond.}~\texttt{ComBat}}
+\newcommand{\ccombat}{\texttt{Cond.}~\texttt{ComBat}}
+\newcommand{\cccombat}{\texttt{Causal}~\texttt{cComBat}}
+\newcommand{\edits}[1]{{\color{black} #1 }}
+
+
+\title{
+A Causal Perspective for Batch Effects: when is no answer better than a wrong answer?
+}
+
+\author{
+    Eric W.~Bridgeford$^{1,\dagger}$, 
+    Michael Powell$^1$,
+    Gregory Kiar$^2$,
+    Stephanie Noble$^3$,
+    Jaewon Chung$^1$,
+    Sambit Panda$^1$,
+    Ross Lawrence$^1$,
+    Ting Xu$^2$,
+    Michael Milham$^2$,
+    Brian Caffo$^1$,
+    Joshua T.~Vogelstein$^{1}$
+    \thanks{
+     $^1$ Johns Hopkins University $^2$ Child Mind Institute, $^3$ Yale University,
+    $^\dagger$ Corresponding author:
+      Eric W.~Bridgeford (\email{ebridge2@jhu.edu}), 3400 N. Charles Street Clark Hall, Suite 200. Baltimore, MD, USA 21218.}
+}
+
+
+\makeatletter
+\def\thanks#1{\protected@xdef\@thanks{\@thanks
+        \protect\footnotetext{#1}}}
+\makeatother
+\makeatletter
+\renewcommand\@biblabel[1]{#1.}
+\makeatother
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\edits{Batch effects, undesirable sources of variance across multiple experiments, present significant challenges for scientific and clinical discoveries. Specifically, batch effects can introduce spurious findings and obscure genuine signals, contributing to the ongoing reproducibility crisis. Typically, batch effects are treated as associational or conditional effects for both detection and harmonization, despite their potential to causally impact downstream inferences due to variations in experimental design and the underlying study populations. In this study, we propose a framework to formalize batch effects as causal effects. We then develop straightforward procedures to augment existing approaches with causal machinery for batch effect detection and correction. We illustrate via simulation that with sufficiently similar data across batches, our causal approaches mitigate spurious findings and reveal additional signals as compared to conditional approaches. We find that unless often inappropriate assumptions hold, conditional procedures can provide misleading, poorly supported, or incorrect answers about the strength or presence of batch effects. Applying our approaches to a large neuroimaging mega-study, we find that juxtaposition of conditional and causal techniques indicates widely disparate estimates of prevalence rates for batch effects, and so-called ``harmonized data'' yield widely different subsequent inference. Together, we believe that this work provides a framework and potential limitations for the collection, harmonization, and subsequent analysis of multi-site scientific mega-studies.}
+\end{abstract}
+
+\input{Content/intro}
+
+
+\input{Content/novel_methods}
+
+\input{Content/results}
+
+\input{Content/discussion}
+
+% \input{Content/notnovel_methods}
+
+
+\bibliographystyle{plainnat}
+\bibliography{batch}
+
+\appendix
+
+% \include{Appendix/methods_long}
+\include{Appendix/appendix}
+
+\end{document}
+
+
+

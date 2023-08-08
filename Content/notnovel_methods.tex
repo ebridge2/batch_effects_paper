@@ -1,0 +1,128 @@
+\section{Methods (Expanded)}
+
+\label{sec:notnovel_methods}
+
+\subsection{Covariate Adjustment}
+\label{sec:covar_adjustment}
+The exposed group $t$ is selected to be the smaller of the two groups, and the unexposed group $t'$ is selected to be the larger of the two groups, where $n_t$ is the number of individuals in the exposed group and $n_{t'}$ is the number of individuals in the unexposed group. The ``covariate overlap'' procedure attempts to ensure positivity of the propensity distribution for the unexposed group (i.e., $e(t'|x) > 0$). Intuitively, we exclude individuals from the unexposed group who do not appear ``similar'' to individuals in the exposed group. In this work, covariate overlap is established through logistic regression by excluding individuals in the control group with a propensity for exposure lower than $0.01$. Similarly, the ``covariate balancing'' procedure attempts to re-weight observations in the per-batch covariate distributions such that the covariate distributions are approximately equal (i.e., $f(x|t) \approx f(x|t')$). In this work, we perform $k:1$ nearest-neighbor matching using the \texttt{MatchIt} package \cite{matchit}. The number of matches $k = \floor{\frac{n_{t'}}{n_t}}$ is chosen to be the largest number of unexposed matches possible. Individuals are balanced on the basis of individual sex, individual age, and continent of study. As there are likely many other categories with which brain connectivity may be confounded, we do not believe this covariate set is necessarily sufficient to identify a Causal Batch Effect \ref{def:causal_batch_informal}, as we would need to be confident that these covariates exhibited the covariate sufficiency property. We perform exact matching on the basis of individual sex and individual continent of measurement, and use a $0.1$-standard deviation caliper on the propensity score to obtain at most $k$ matched participants for each treated individual \cite{Powell2020Sep}.
+
+\subsection{Hypothesis Testing}
+
+\label{app:hypo_testing}
+Recall that statements of the form $f(y) = g(y)$ against $f(y) \neq g(y)$ are equivalent to $P_f = P_g$ against $P_f \neq P_g$, as probability densities uniquely define distribution functions. Therefore, hypotheses for the effects described in Section \ref{sec:methods} require two-sample and conditional two-sample testing procedures. A natural test statistic for the two-sample testing procedure is the Distance Correlation \cite{Szekely2007Dec}, which is a non-parametric test for testing whether two variables are correlated. A simple augmentation of the distance correlation procedure \cite{Shen2017-ub,Vogelstein2019-zt} shows that \texttt{DCorr} can be used for the two-sample test, or a test of whether two samples are drawn from different distributions. \texttt{DCorr} is exactly equivalent in this context to the Maximum Mean Discrepency (MMD), which embeds points in a reproducing kernel Hilbert Space (RKHS) and looks for functions over the unit ball in the RKHS that maximize the difference of the means of the embedded points. When we instead consider the conditional two-sample test (i.e., a test of $f(y|x)= g(y|x)$ against $f(y|x) \neq g(y|x)$), we instead use the conditional distance correlation \cite{Wang2015}, a kernel-based approach in which the points are embedded in a new, non-linear Hilbert Space, which augments the traditional linear Hilbert Space used in distance correlation to allow the definition of the squared distance covariance. Below, we let $\mathbf Y = (y_i) \in \mathcal Y^n$ denote realizations across both samples and $\vec t = (t_i) \in \{t, t'\}^n$ indicate from which sample each realization is drawn. $\mathbf X = (x_i) \in \mathcal X^n$ denotes covariates which are known about the objects of interest.
+
+\paragraph{Associational Effect}
+
+We have the following null and alternative hypotheses:
+\begin{align*}
+    H_0 : f(y|t) = f(y|t')\text{ against }H_A: f(y|t) \neq f(y|t')
+\end{align*}
+A test of the preceding hypotheses is performed using the distance correlation, and the natural test statistic is $\texttt{DCorr}(\mathbf Y, \vec t)$.
+
+\paragraph{Conditional Effect}
+
+We have the following null and alternative hypotheses:
+\begin{align*}
+    H_0: f(y|t,x) = f(y|t',x) \text{ against }H_A: f(y|t,x) \neq f(y|t',x)
+\end{align*}
+A test of the preceding hypotheses is performed using the conditional distance correlation, and the natural test statistic is $\texttt{cDCorr}(\mathbf Y, \vec t | \mathbf X)$. 
+
+\paragraph{Adjusted Conditional Effect}
+
+We have the following null and alternative hypotheses:
+\begin{align*}
+    H_0: \tilde f(y|t,x) = \tilde f(y|t',x) \text{ against }H_A: \tilde f(y|t,x) \neq \tilde f(y|t',x)
+\end{align*}
+Unlike the preceding tests, we instead consider the data $(\tilde {\mathbf Y}, \vec{\tilde t}, \tilde {\mathbf X})$, which are the measurements, sample indicators, and covariates of the $n$ realizations after covariate adjustment. A test of the preceding hypotheses is performed using the conditional distance correlation, and the natural test statistic is $\texttt{cDCorr}(\mathbf {\tilde Y}, \vec {\tilde t} | \mathbf {\tilde X})$. 
+
+\paragraph{Causal Crossover Effect}
+
+We have the following null and alternative hypotheses:
+\begin{align*}
+    H_0: f\parens*{y^{(t)} \big | t, x^{(t)}} = f\parens*{y^{(t')} \big | t', x^{(t')}}\text{ against }H_A: H_0: f\parens*{y^{(t)} \big | t, x^{(t)}} \neq f\parens*{y^{(t')} \big | t', x^{(t')}}
+\end{align*}
+If the known covariates are identical between batches $t$ and $t'$, we test the preceding hypotheses using the distance correlation, and the natural test statistic is $\texttt{DCorr}(\mathbf Y, \vec t)$. If the known covariates are not identical between batches $t$ and $t'$, we test the preceding hypotheses using the conditional distance correlation, and the natural test statistic is $\texttt{cDCorr}(\mathbf Y, \vec t | \mathbf X)$.
+
+\paragraph{More Than Two Batches}
+
+The above approaches generalize sufficiently to $K$ batches using $K$-sample testing approaches \cite{Bridgeford2023Jul}. With $f_k$ for $k \in [K]$ denoting the densities associated with $K$ sites or batches, this motivates hypotheses of the form:
+\begin{align*}
+    H_0 : f_k = f_l \text{ for all }k, l \text{ against }H_A: f_k \neq f_l \text{ for some }k \neq l,
+\end{align*}
+which can be tested using the distance correlation or the conditional distance correlation as above, with the caveat that $\vec t$ becomes the matrix $\mathbf T = (t_{i,k}) \in \{0, 1\}^{n \times K}$. Each entry $t_{ik} = 1$ if sample $i$ is in batch $k$, and $0$ otherwise. For the purposes of this manuscript, we focus on the two-batch case.
+
+\paragraph{$p$-values and Multiple Hypothesis Correction}
+
+$p$-values in this manuscript are estimated using permutation testing, which is an approach to obtain the distribution of the test statistic under the null with minimal assumptions and approximations \cite{Efron2004Mar}. All $p$-values are estimated using $N=1$,$000$ (detection, Figure \ref{fig:raw_pairwise}) or $N=10$,$000$ (correction, Figure \ref{fig:different}) permutations. Across all figures associated with this work, we are concerned with obtaining a proper estimate of the rate at which we detect effects (\textit{discoveries}). Therefore, we control the false discovery rate (FDR) with the Benjamini-Hochberg Correction \cite{BH}. 
+
+
+
+% The preceding effects motivate the the null hypothesis that the effect is not present against the alternative that the effect is present. For the associational effect and the causal crossover effect, we leverage the distance correlation (\texttt{DCorr}) \cite{Szekely2007Dec}, a kernel-based test statistic that is equivalent to the Maximum Mean Discrepancy (MMD) \cite{Shen2017-ub,Vogelstein2019-zt}. For the conditional effect and the adjusted effect, we leverage the partial distance corrlation (\texttt{cDCorr}) \cite{Szekely2014Dec}. $p$-values are estimated using permutation testing with $N=10,000$ permutations, and are adjusted using the Benjamini-Hochberg procedure \cite{BH}. Further details on hypothesis testing are found in Appendix \ref{app:hypo_testing}.
+
+
+\subsection{Batch effect correction via $z$-scoring}
+
+We compare $z$-scoring per-feature within each batch \cite{Lazar2013Jul} and traditional \Combat\ to Causal \Combat. For a given edge $y_{i}^{(t)}(k,l)$ $(k, l)$ for an individual $i$ in batch $t$, we define the $z$-score corrected edge-weight to be:
+\begin{align*}
+    z_{i}^{(t)}(k, l) = \frac{y_i^{(t)}(k, l) - \bar y^{(t)}(k, l)}{s^{(t)}(k, l)},
+\end{align*}
+where $\bar y^{(t)}(k, l)$ is the sample mean and $s^{(t)}(k, l)$ is the sample standard deviation for edge $(k, l)$ in batch $t$. These strategies reduce known topological properties of human connectomes; particularly, homotopy, as shown in Figure \ref{fig:top_hist} and Figure \ref{fig:site_individual} and are therefore not considered for more careful analysis.
+
+\subsection{Control Numerical Experiments}
+
+Control experiments are performed to ensure that after batch effect correction, the resulting data maintains interpretability and utility for scientific inquiry. Even if the data is devoid of batch effects, it must still be useful for downstream inference. For our connectome data, we identify two key control scenarios, the preservation of demographic effects and the preservation topological effects, which are desirable to preserve after batch effect correction.
+
+\label{app:control}
+\paragraph{Testing Topological Properties}
+
+
+\paragraph{Demographic Effect}
+
+Demographic effects are investigated across both the subset of connectomes upon which Causal \Combat~ is executed (the American Clique) and the full dataset. We observe the tuple $\parens*{y_{i}(k,l), s_i, a_i, t_i}$ for $i \in [n]$, and $k, l \in [V]$, where $V=116$ denotes the number of parcels in the Automated Anatomical Labelling (AAL) parcellation \cite{aal}. We suppose that $Y(k,l)$ is the $[0,1]$-valued random variable denoting the weight of edge $(k,l)$, $S$ is the binary-valued random variable denoting the biological sex, $A$ is the positive real-valued random variable denoting age, and $T$ is the $[K]$-valued random variable denoting the batch. We let $\vec y{(k,l)} = \parens*{y_{i}(k,l)} \in \mathcal [0,1]^n$ denote the realized edge weights, $\vec s = (s_i) \in \{0,1\}^n$ denote the realized biological sexes, $\vec a = (a_i) \in \realn^n$ denote the realized biological ages, and $\vec t = (t_i) \in [K]^n$ denote the realized batches. We say that a \textbf{demographic sex effect} exists when:
+\begin{align*}
+    f(y | a, s) \neq f(y|a,s')
+\end{align*}
+To test for a demographic sex effect, we have the following null and alternative hypotheses:
+\begin{align*}
+    H_0: f(y | a, s) = f(y | a, s') \text{ against }f(y|a,s) \neq f(y|a,s')
+\end{align*}
+We are able to test the preceding hypothesis using the partial distance correlation, and the test statistic is $\texttt{pDCorr}(\vec y(k,l), \vec s | \vec a)$.
+
+% \paragraph{Demographic Effect}
+
+% Demographic effects are investigated within each batch separately, to \textit{eliminate} the possible confounding of unobserved demographic and batch effects. Within a single batch $t$, We observe the tuple $(y_i, s_{i}, a_{i})$, for $i \in [n_t]$. We suppose that $S$ is the binary-valued random variable denoting the biological sex, and $A$ is the positive real valued random variable denoting age. We let $\mathbf Y = (y_i) \in \mathcal Y^{n_t}$ denote the realized measurements, $\vec s = (s_i) \in \{0,1\}^{n_t}$ denotes the realized biological sexes, and $\vec a = (a_i) \in \realn_+^{n_t}$ denotes the realized ages.
+
+% We define that a \textbf{demographic age effect} exists when:
+% \begin{align*}
+%     f(y|a, s) \neq f(y|a', s)
+% \end{align*}
+% To test for a demographic age effect, we have the following null and alternative hypotheses:
+% \begin{align*}
+%     H_0: f(y|a, s) = f(y|a', s) \text{ against }H_A: f(y|a, s) \neq f(y|a', s)
+% \end{align*}
+% We test the preceding hypotheses using the partial distance correlation, and the test statistic is $\texttt{cDCorr}(\mathbf Y, \vec a | \vec s)$. 
+
+% Similarly, we define that a \textbf{demographic sex effect} exists when:
+% \begin{align*}
+%     f(y|a, s) \neq f(y|a, s')
+% \end{align*}
+% Where $s \neq s'$.
+
+% To test for a demographic sex effect, we have the following null and alternative hypotheses:
+% \begin{align*}
+%     H_0: f(y|a, s) = f(y|a, s') \text{ against }H_A: f(y|a, s) \neq f(y|a, s')
+% \end{align*}
+% We test the preceding hypotheses using the partial distance correlation, and the test statistic is $\texttt{cDCorr}(\mathbf Y, \vec s | \vec a)$. 
+
+
+
+\subsection{Datasets}
+\label{sec:corr_descr}
+The CoRR Mega-Study \cite{corr} is an aggregate dataset consisting of $27$ studies collected with a similar goal: assessing the reliability and reproducibility of neuroimaging data. The mega-study consists of $1313$ individuals, most of whom are measured numerous times, for a total of $N=3597$ connectomes. All connectomes are estimated using the \texttt{m2g} (MRI to Graphs) pipeline \cite{m2g}, which provides a wrapper for the \texttt{CPAC} Pipeline \cite{cpac}. fMRI scans for each individual are first processed to remove motion artifacts using \texttt{mcflirt} \cite{flirt}. The fMRI scans are then registered to the corresponding individual's anatomical scan using FSL's boundary-based registration (BBR) via \texttt{epireg} \cite{epireg}. A non-linear transformation from the individual's anatomical scan to the MNI152 \cite{mni152} template is estimtaed using \texttt{FNIRT} \cite{fnirt}. Nuisance artifacts are removed by fitting the voxelwise timeseries to a regression model incorporating regressors for the Friston 24-parameter model \cite{friston24}, the top five principal components of the voxelwise timeseries in cerebrospinal fluid \texttt{aCompCor} \cite{acompcor}, and a quadratic drift term. The adjusted voxelwise timeseries is downsampled to the regions of interest (ROIs) of the Automated Anatomical Labelling (AAL) parcellation \cite{aal} by taking the spatial mean signal for each timepoint across voxels within the region of interest. Functional connectivity is estimated using the pairwise correlation between all pairs of ROI timeseries within the AAL parcellation. Parcels are sorted throughout the manuscript according to hemispheric order, in which the parcels are aligned with left hemisphere parcels followed by right hemisphere parcels. Within hemisphere, parcels are sorted by AAL parcel number. For each study, we have baseline covariates for the continent, sex, and the age of participants.
+
+
+\paragraph{The American Clique} The ``American Clique'' describes a subset of the CoRR Mega-Study in which the sample populations share similarities in sample demographic characteristics. These studies share a demographic focusing on males and females (in roughly equal proportions) of individuals across a wide age range, and include the ``NYU2'', ``IBATRT'', ``MRN1'', ``UWM'', and ``NYU1'' studies. The $833$ connectomes comprising the studies of the American clique are reduced to the $N=321$ connectomes with maximal demographic overlap identified through covariate adjustment \ref{sec:covar_adjustment}.
+
+\paragraph{The NKI Rockland Sample} \cite{nkirs} is a single study from the CoRR Mega-Study consisting of 24 individuals, each of whom is measured two times across three functional MRI acquisition protocols, which vary in the repetition time for each slice of the sequence (TR). The data was collected with the intention of investigating the impact of the different MRI protocols in a crossover-randomized approach. Due to the crossover property, evidence in favor of an effect provides strong evidence of a causal batch effect. Images with a TR of 645 millisecond (ms), 1400 ms, and 2500 ms are measured, with the prompt for each subject remaining identical.
+
+
