@@ -1,4 +1,4 @@
-\documentclass[onefignum, onetabnum,onealgnum,onethmnum, oneeqnum]{siamonline190516}
+\documentclass[onefignum,onetabnum,onealgnum,onethmnum, oneeqnum]{siamonline190516}
 \input{nd_preamble.tex}  
 \usepackage[symbol]{footmisc}
 \renewcommand{\thefootnote}{\arabic{footnote}}
@@ -9,9 +9,11 @@
 \definecolor{fig1orange}{rgb}{0.7, 0.34, 0.005}
 \newcommand{\Combat}{\texttt{ComBat}}
 \newcommand{\combat}{\texttt{ComBat}}
-\newcommand{\cCombat}{\texttt{Cond.}~\texttt{ComBat}}
-\newcommand{\ccombat}{\texttt{Cond.}~\texttt{ComBat}}
+\newcommand{\cCombat}{\texttt{c}\texttt{ComBat}}
+\newcommand{\ccombat}{\texttt{c}\texttt{ComBat}}
 \newcommand{\cccombat}{\texttt{Causal}~\texttt{cComBat}}
+\newcommand{\combatgam}{\ccombat\texttt{GAM}}
+\newcommand{\ccombatgam}{\ccombat\texttt{GAM}}
 \newcommand{\edits}[1]{{\color{black} #1 }}
 
 
@@ -55,15 +57,11 @@ A Causal Perspective for Batch Effects: when is no answer better than a wrong an
 
 \input{Content/intro}
 
-
-\input{Content/novel_methods}
+\input{Content/causal_methods}
 
 \input{Content/results}
 
 \input{Content/discussion}
-
-% \input{Content/notnovel_methods}
-
 
 \bibliographystyle{plainnat}
 \bibliography{batch}
